@@ -6,7 +6,7 @@
 package com.mycompany.exercise4;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
- 
+
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -17,134 +17,100 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
- 
+
 public class App {
- 
+
+
     public static void main(String[] args) throws Exception {
-        
         Parser.parse();
         thread(new HelloWorldProducer(), false);
-        thread(new HelloWorldProducer(), false);
         thread(new HelloWorldConsumer(), false);
-        Thread.sleep(1000);
-        thread(new HelloWorldConsumer(), false);
-        thread(new HelloWorldProducer(), false);
-        thread(new HelloWorldConsumer(), false);
-        thread(new HelloWorldProducer(), false);
-        Thread.sleep(1000);
-        thread(new HelloWorldConsumer(), false);
-        thread(new HelloWorldProducer(), false);
-        thread(new HelloWorldConsumer(), false);
-        thread(new HelloWorldConsumer(), false);
-        thread(new HelloWorldProducer(), false);
-        thread(new HelloWorldProducer(), false);
-        Thread.sleep(1000);
-        thread(new HelloWorldProducer(), false);
-        thread(new HelloWorldConsumer(), false);
-        thread(new HelloWorldConsumer(), false);
-        thread(new HelloWorldProducer(), false);
-        thread(new HelloWorldConsumer(), false);
-        thread(new HelloWorldProducer(), false);
-        thread(new HelloWorldConsumer(), false);
-        thread(new HelloWorldProducer(), false);
-        thread(new HelloWorldConsumer(), false);
-        thread(new HelloWorldConsumer(), false);
-        thread(new HelloWorldProducer(), false);
+
     }
- 
-   
-    
+
     public static void thread(Runnable runnable, boolean daemon) {
         Thread brokerThread = new Thread(runnable);
         brokerThread.setDaemon(daemon);
         brokerThread.start();
     }
-    
+
     public static class HelloWorldProducer implements Runnable {
+
         public void run() {
             try {
-                // Create a ConnectionFactory
-                ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost");
- 
-                // Create a Connection
-                Connection connection = connectionFactory.createConnection();
+                ActiveMQConnectionFactory activeConnectionFactory = new ActiveMQConnectionFactory("vm://localhost");
+                Connection connection = activeConnectionFactory.createConnection();
                 connection.start();
-                
-                // Create a Session
-                Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-                for(int i=0;i<Parser.authorsList.size();i++){  
-                // Create the destination (Topic or Queue)
-                Destination destination = session.createTopic("TEST.FOO");
- 
-                // Create a MessageProducer from the Session to the Topic or Queue
-                MessageProducer producer = session.createProducer(destination);
+                Session newSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                Destination destination = newSession.createTopic("Example.Library.Publication");
+                MessageProducer producer = newSession.createProducer(destination);
                 producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
- 
-                // Create a messages
-                     
-                  
-                    String text = Parser.authorsList.get(i)+" : " + Thread.currentThread().getName() + " : " + this.hashCode();
-                    TextMessage message = session.createTextMessage(text);
-                        
-                // Tell the producer to send the message
-                    System.out.println("Sent message: "+ message.hashCode() + " : " + Thread.currentThread().getName());
+                for(int i=0;i<Parser.authorsList.size();++i){
+                    String text = Parser.authorsList.get(i);
+                    TextMessage message = newSession.createTextMessage(text);
+                    System.out.println("Sent message: "+text);
                     producer.send(message);
-                }    
+                }
+                for(int i=0;i<Parser.booksList.size();++i){
+                    String text = Parser.booksList.get(i);
+                    TextMessage message = newSession.createTextMessage(text);
+                    System.out.println("Sent message: "+text);
+                    producer.send(message);
+                }
                 
-                // Clean up
-                session.close();
+                newSession.close();
                 connection.close();
-            }
-            catch (Exception e) {
+
+            } catch (Exception e) {
                 System.out.println("Caught: " + e);
                 e.printStackTrace();
             }
         }
     }
- 
+
     public static class HelloWorldConsumer implements Runnable, ExceptionListener {
+
         public void run() {
             try {
- 
-                // Create a ConnectionFactory
-                ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost");
- 
-                // Create a Connection
-                Connection connection = connectionFactory.createConnection();
+                ActiveMQConnectionFactory activeConnectionFactory = new ActiveMQConnectionFactory("vm://localhost");
+                Connection connection = activeConnectionFactory.createConnection();
                 connection.start();
- 
                 connection.setExceptionListener(this);
- 
-                // Create a Session
-                Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-                for(int i=0;i<Parser.authorsList.size();i++){    
-                // Create the destination (Topic or Queue)
-                Destination destination = session.createTopic("TEST.FOO");
- 
-                // Create a MessageConsumer from the Session to the Topic or Queue
-                MessageConsumer consumer = session.createConsumer(destination);
- 
-                // Wait for a message
-                Message message = consumer.receive(1000);
- 
-                if (message instanceof TextMessage) {
-                    TextMessage textMessage = (TextMessage) message;
-                    String text = textMessage.getText();
-                    System.out.println("Received: " + text);
-                } else {
-                    System.out.println("Received: " + message);
+                Session newSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                Destination destination = newSession.createTopic("Example.Library.Publication");
+                MessageConsumer consumer = newSession.createConsumer(destination);
+
+                for(int i=0;i<Parser.authorsList.size();++i){
+                    Message message = consumer.receive(1000);
+
+                    if (message instanceof TextMessage) {
+                        TextMessage textMessage = (TextMessage) message;
+                        String text = textMessage.getText();
+                        System.out.println("Received: " + text);
+                    } else {
+                        System.out.println("Received: " + message);
+                    }
                 }
-                
+                for(int i=0;i<Parser.booksList.size();++i){
+                    Message message = consumer.receive(1000);
+
+                    if (message instanceof TextMessage) {
+                        TextMessage textMessage = (TextMessage) message;
+                        String text = textMessage.getText();
+                        System.out.println("Received: " + text);
+                    } else {
+                        System.out.println("Received: " + message);
+                    }
+                }
                 consumer.close();
-                }
-                session.close();
+                newSession.close();
                 connection.close();
             } catch (Exception e) {
                 System.out.println("Caught: " + e);
                 e.printStackTrace();
             }
         }
- 
+
         public synchronized void onException(JMSException ex) {
             System.out.println("JMS Exception occured.  Shutting down client.");
         }

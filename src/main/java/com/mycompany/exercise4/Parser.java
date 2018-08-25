@@ -21,6 +21,7 @@ import org.xml.sax.SAXException;
 public class Parser {
         
         static ArrayList<String> authorsList = new ArrayList<String>();
+        static ArrayList<String> booksList = new ArrayList<String>();
     
 	public static void parse() {
 	DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -56,8 +57,9 @@ public class Parser {
 					Node k = bookInfoList.item(j);
 					if(k.getNodeType()==Node.ELEMENT_NODE) {
 						Element info = (Element) k;
-						System.out.println("Book "+id+":"+info.getTagName()+"="+info.getTextContent());
-					}
+						String tmp="Book "+id+":"+info.getTagName()+"="+info.getTextContent();
+                                                booksList.add(tmp);
+                                        }
 				}
 			}
 		}
