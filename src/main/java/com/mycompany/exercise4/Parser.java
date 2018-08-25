@@ -6,6 +6,7 @@
 package com.mycompany.exercise4;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -18,10 +19,13 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 public class Parser {
-
+        
+        static ArrayList<String> authorsList = new ArrayList<String>();
+    
 	public static void parse() {
 	DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 	try {
+                
 		DocumentBuilder builder = factory.newDocumentBuilder();
 		Document doc = builder.parse("exercise-1.xml");
 		NodeList authorList = doc.getElementsByTagName("author");
@@ -36,7 +40,8 @@ public class Parser {
 					Node n = nameList.item(j);
 					if(n.getNodeType()==Node.ELEMENT_NODE) {
 						Element name = (Element) n;
-						System.out.println("Person "+id+":"+name.getTagName()+"="+name.getTextContent());
+						String tmp = "Person "+id+":"+name.getTagName()+"="+name.getTextContent();
+                                                authorsList.add(tmp);
 					}
 				}
 			}

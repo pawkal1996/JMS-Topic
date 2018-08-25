@@ -69,10 +69,10 @@ public class App {
                 // Create a Connection
                 Connection connection = connectionFactory.createConnection();
                 connection.start();
- 
+                
                 // Create a Session
                 Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
- 
+                for(int i=0;i<Parser.authorsList.size();i++){  
                 // Create the destination (Topic or Queue)
                 Destination destination = session.createTopic("TEST.FOO");
  
@@ -81,14 +81,15 @@ public class App {
                 producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
  
                 // Create a messages
-                    
-                    String text = "Hello world! From: " + Thread.currentThread().getName() + " : " + this.hashCode();
+                     
+                  
+                    String text = Parser.authorsList.get(i)+" : " + Thread.currentThread().getName() + " : " + this.hashCode();
                     TextMessage message = session.createTextMessage(text);
- 
+                        
                 // Tell the producer to send the message
-                System.out.println("Sent message: "+ message.hashCode() + " : " + Thread.currentThread().getName());
-                producer.send(message);
- 
+                    System.out.println("Sent message: "+ message.hashCode() + " : " + Thread.currentThread().getName());
+                    producer.send(message);
+                }    
                 
                 // Clean up
                 session.close();
@@ -116,7 +117,7 @@ public class App {
  
                 // Create a Session
                 Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
- 
+                for(int i=0;i<Parser.authorsList.size();i++){    
                 // Create the destination (Topic or Queue)
                 Destination destination = session.createTopic("TEST.FOO");
  
@@ -133,8 +134,9 @@ public class App {
                 } else {
                     System.out.println("Received: " + message);
                 }
- 
+                
                 consumer.close();
+                }
                 session.close();
                 connection.close();
             } catch (Exception e) {
